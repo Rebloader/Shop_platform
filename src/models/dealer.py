@@ -14,5 +14,6 @@ class Dealer(Base):
     name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     phone: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    address: Mapped[str] = mapped_column(String, unique=True, nullable=False)
 
     orders: Mapped[List['Order']] = relationship('Order', back_populates='dealer')
