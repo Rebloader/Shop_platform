@@ -1,10 +1,9 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-
-from src.api_v1.schemas.dealer import DealerBase, DealerCreate, DealerRead
+from src.api_v1.crud.base_crud import CRUD
+from src.api_v1.schemas.dealer import DealerCreate, DealerRead
 from src.models import Dealer
-from base_crud import CRUD
 
 
 class CRUDDealer(CRUD):
@@ -13,6 +12,7 @@ class CRUDDealer(CRUD):
             name=new_dealer.name,
             email=new_dealer.email,
             phone=new_dealer.phone,
+            address=new_dealer.address,
         )
         session.add(new_dealer)
         await session.commit()

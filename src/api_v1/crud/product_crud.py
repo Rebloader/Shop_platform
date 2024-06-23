@@ -1,13 +1,12 @@
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from base_crud import CRUD
+from src.api_v1.crud.base_crud import CRUD
+from src.api_v1.schemas.product import ProductRead, ProductCreate
 from src.models import Product
-from src.api_v1.schemas.product import ProductBase, ProductRead, ProductCreate
 
 
 class CRUDProduct(CRUD):
-    async def create_product(self, session: AsyncSession, product: ProductBase) -> ProductRead:
+    async def create_product(self, session: AsyncSession, product: ProductCreate) -> ProductRead:
         new_product = self.model(
             name=product.name,
             price=product.price,

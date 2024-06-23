@@ -7,9 +7,6 @@ from pydantic import BaseModel, Field
 class OrderItemBase(BaseModel):
     product_id: int
     quantity: int
-    provider_id: int
-    available: bool
-    delivery_time: Optional[datetime]
 
 
 class OrderItemCreate(OrderItemBase):
@@ -18,21 +15,23 @@ class OrderItemCreate(OrderItemBase):
 
 class OrderItemRead(OrderItemBase):
     id: int
+    provider_id: Optional[int]
+    available: bool
+    delivery_time: Optional[datetime]
 
 
 class OrderBase(BaseModel):
     dealer_id: int
-    created_at: datetime
     status: str
 
 
 class OrderCreate(OrderBase):
-    pass
+    items: List['OrderItemCreate']
 
 
 class OrderRead(OrderBase):
     id: int
     created_at: datetime
-    items: List[OrderItemRead]
+    items: List['OrderItemRead']
 
 
