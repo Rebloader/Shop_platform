@@ -1,13 +1,14 @@
 from datetime import datetime
-from typing import List
+from typing import List, TYPE_CHECKING
 
-from sqlalchemy import nteger, String, ForeignKey, UniqueConstraint, Integer, DateTime, Boolean
+from sqlalchemy import String, ForeignKey, Integer, DateTime, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.models.base import Base
-from src.models.dealer import Dealer
-from src.models.product import Product
-from src.models.provider import Provider
+from .base import Base
+if TYPE_CHECKING:
+    from .dealer import Dealer
+    from .product import Product
+    from .provider import Provider
 
 
 class Order(Base):

@@ -1,10 +1,11 @@
-from typing import List
+from typing import List, TYPE_CHECKING
 
-from sqlalchemy import nteger, String, ForeignKey, UniqueConstraint, Integer, DateTime
+from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.models.base import Base
-from src.models.order import Order
+from .base import Base
+if TYPE_CHECKING:
+    from .order import Order
 
 
 class Dealer(Base):
