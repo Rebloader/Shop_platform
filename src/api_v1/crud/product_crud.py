@@ -22,7 +22,13 @@ class CRUDProduct(CRUD):
         product = product.scalars().first()
         return product
 
-
+    async def patch_product_price(self, session: AsyncSession, product_id: int, new_price: int) -> ProductRead:
+        updated_product = self.model(
+            price=new_price,
+        )
+        session.add(updated_product)
+        await session.commit()
+        return updated_product
 
 
 crud_product = CRUDProduct(Product)
