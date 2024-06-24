@@ -12,6 +12,6 @@ class Product(Base):
     __tablename__ = 'product'
 
     name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
-    price: Mapped[str] = mapped_column(Integer, nullable=False)
+    price: Mapped[str] = mapped_column(Integer, nullable=True)
 
     order_items: Mapped[List['OrderItem']] = relationship('OrderItem', back_populates='product')

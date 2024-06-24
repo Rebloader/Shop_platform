@@ -27,7 +27,7 @@ class OrderItem(Base):
 
     order_id: Mapped[int] = mapped_column(ForeignKey('order.id'))
     product_id: Mapped[int] = mapped_column(ForeignKey('product.id'))
-    provider_id: Mapped[int] = mapped_column(ForeignKey('provider.id'))
+    provider_id: Mapped[int] = mapped_column(ForeignKey('provider.id'), nullable=True)
 
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     available: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)

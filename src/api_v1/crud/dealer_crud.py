@@ -16,7 +16,13 @@ class CRUDDealer(CRUD):
         )
         session.add(new_dealer)
         await session.commit()
+        await session.refresh(new_dealer)
         return new_dealer
+
+    async def get_dealer_by_name(self, session: AsyncSession, dealer_name: str) -> DealerRead:
+        dealer = await session.execute(select(self.model).where(self.model.name == dealer_name))
+        dealer = dealer.scalars().first()
+        return dealer
 
     async def update_dealer(self):
         pass

@@ -3,7 +3,6 @@ from pydantic import BaseModel
 
 class ProductBase(BaseModel):
     name: str
-    price: int
 
 
 class ProductCreate(ProductBase):
@@ -12,3 +11,4 @@ class ProductCreate(ProductBase):
 
 class ProductRead(ProductBase):
     id: int
+    price: int
