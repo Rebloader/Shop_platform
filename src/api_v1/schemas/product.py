@@ -12,3 +12,7 @@ class ProductCreate(ProductBase):
 class ProductRead(ProductBase):
     id: int
     price: int
+
+
+class ProductUpdate(ProductBase):
+    price: int

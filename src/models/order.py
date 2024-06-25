@@ -31,8 +31,9 @@ class OrderItem(Base):
 
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     available: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    delivery_time: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    delivery_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     status: Mapped[str] = mapped_column(String, nullable=False)
+    total_price: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     product: Mapped['Product'] = relationship('Product', back_populates='order_items')
     order: Mapped['Order'] = relationship('Order', back_populates='items')

@@ -24,6 +24,12 @@ class CRUDDealer(CRUD):
         dealer = dealer.scalars().first()
         return dealer
 
+    async def get_dealer_list(self, session: AsyncSession) -> list[DealerRead]:
+        dealer_list = await session.execute(select(self.model).order_by(self.model.id))
+        dealer_list = dealer_list.scalars().all()
+        return [DealerRead(id=dealer.id, name=dealer.name, email=dealer.email,
+                           phone=dealer.phone, address=dealer.address) for dealer in dealer_list]
+
     async def update_dealer(self):
         pass
 

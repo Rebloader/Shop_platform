@@ -1,14 +1,13 @@
 from typing import Annotated, List
 
-from fastapi import FastAPI, Depends, APIRouter
+from fastapi import FastAPI, Depends, APIRouter, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-
 
 from src.db_helper import get_async_session
 from src.api_v1.schemas.provider import ProviderRead, ProviderCreate
 from src.api_v1.schemas.product import ProductRead, ProductCreate
 from src.api_v1.schemas.dealer import DealerCreate, DealerRead
-from src.api_v1.schemas.order import OrderCreate, OrderItemRead, OrderRead
+from src.api_v1.schemas.order import OrderCreate, OrderItemRead, OrderRead, OrderItemUpdate
 
 from src.api_v1.crud.product_crud import crud_product
 from src.api_v1.crud.dealer_crud import crud_dealer
@@ -18,7 +17,13 @@ from src.api_v1.crud.provider_crud import crud_provider
 router = APIRouter(prefix='/api/v1', tags=['api_v1'])
 
 
-@router.get('/get_dealer_orders/{dealer_id}/')
+@router.get('/get_all_dealer/')
+async def get_all_dealers(session: AsyncSession = Depends(get_async_session)):
+    dealers = await crud_dealer.get_dealer_list(session=session)
+    return dealers
+
+
+@router.get('/get_dealer_orders/{dealer_id}/', response_model=list[OrderRead])
 async def get_dealer_orders_by_id(dealer_id: int, session: AsyncSession = Depends(get_async_session)):
     result = await crud_order.get_dealer_orders(session=session, dealer_id=dealer_id)
     return result
@@ -43,5 +48,19 @@ async def create_order(order: OrderCreate,
     new_order = await crud_order.create_order(session=session,
                                               dealer_id=dealer.id,
                                               status=order.status,
-                                              order=order,)
+                                              order=order)
     return new_order
+
+
+@router.patch('/change_order_item_info/{order_item_id}', response_model=OrderItemRead)
+async def change_order_item_info(order_item_id: int,
+                                 order_item: OrderItemUpdate,
+                                 session: Annotated[AsyncSession, Depends(get_async_session)]):
+    product = await crud_product.get_product_by_name(session=session, product_name=order_item.product.name)
+    if not product:
+        raise HTTPException(status_code=404, detail='Product not found')
+
+    updated_order_item = await crud_order.update_order_item(session=session, order_item=order_item,
+                                                            order_item_id=order_item_id,
+                                                            product_id=product.id)
+    return updated_order_item

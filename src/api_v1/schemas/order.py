@@ -4,7 +4,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 from src.api_v1.schemas.dealer import DealerCreate, DealerRead
-from src.api_v1.schemas.product import ProductCreate, ProductRead
+from src.api_v1.schemas.product import ProductCreate, ProductRead, ProductUpdate
 
 
 class OrderItemBase(BaseModel):
@@ -21,6 +21,14 @@ class OrderItemRead(OrderItemBase):
     provider_id: Optional[int]
     available: bool
     delivery_time: Optional[datetime]
+    total_price: int
+
+
+class OrderItemUpdate(OrderItemBase):
+    provider_id: int = Field(..., gt=0, le=99)
+    product: ProductUpdate
+    available: bool = True
+    delivery_time: datetime
 
 
 class OrderBase(BaseModel):

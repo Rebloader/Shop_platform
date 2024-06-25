@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import select
+from fastapi import HTTPException, status
+from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -12,7 +13,8 @@ from src.api_v1.crud.base_crud import CRUD
 from src.api_v1.crud.product_crud import crud_product
 from src.api_v1.crud.provider_crud import crud_provider
 from src.api_v1.crud.dealer_crud import crud_dealer
-from src.api_v1.schemas.order import OrderRead, OrderItemRead, OrderItemCreate, OrderCreate
+from src.api_v1.schemas.order import OrderRead, OrderItemRead, OrderItemCreate, OrderCreate, OrderItemUpdate
+from src.api_v1.crud.serializer import serialize_order_item, serialize_order
 
 
 class OrderCRUD(CRUD):
@@ -52,7 +54,8 @@ class OrderCRUD(CRUD):
                 quantity=new_order_item.quantity,
                 provider_id=new_order_item.provider_id,
                 available=new_order_item.available,
-                delivery_time=new_order_item.delivery_time
+                delivery_time=new_order_item.delivery_time,
+                total_price=(product.price * new_order_item.quantity)
             )
             order_items.append(order_item_read)
 
@@ -77,46 +80,40 @@ class OrderCRUD(CRUD):
 
         dealer_info = await crud_dealer.get_item_by_id(session=session, id_=dealer_id)
 
-        orders_result: list[OrderRead] = []
-        for order in result:
-            order_items: list[OrderItemRead] = []
-            # list_order_item = await session.execute(select(OrderItem).where(OrderItem.order_id == order.id))
-            for order_item in order.items:
-                product_info = await crud_product.get_item_by_id(session=session, id_=order_item.product_id)
-                order_item_info = OrderItemRead(
-                    id=order_item.order_id,
-                    quantity=order_item.quantity,
-                    product=ProductRead(id=product_info.id, name=product_info.name, price=product_info.price),
-                    provider_id=order_item.provider_id,
-                    available=order_item.available,
-                    delivery_time=order_item.delivery_time,
-                )
-                order_items.append(order_item_info)
-            order_read = OrderRead(
-                id=order.id,
-                status=order.status,
-                dealer=DealerRead(id=dealer_info.id, name=dealer_info.name, email=dealer_info.email,
-                                  address=dealer_info.address, phone=dealer_info.phone, ),
-                created_at=order.created_at,
-                items=order_items,
-            )
-            orders_result.append(order_read)
+        dealer_to_read = DealerRead(id=dealer_info.id, name=dealer_info.name, email=dealer_info.email,
+                                    phone=dealer_info.phone, address=dealer_info.address)
+        result = [await serialize_order(session, order, dealer_to_read) for order in result]
+        return result
 
-        return orders_result
+    async def update_order_item(self, session: AsyncSession, order_item: OrderItemUpdate,
+                                order_item_id: int, product_id: int) -> OrderItemRead:
+        db_order_item = await session.get(OrderItem, order_item_id)
+        if not db_order_item:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,)
+        await session.execute(update(Product).
+                              where(Product.id == product_id).
+                              values(price=order_item.product.price))
+        await session.commit()
+        product = await session.get(Product, product_id)
 
-    async def update_order_item_provider(self, session: AsyncSession, order_item_id: int,
-                                         provider_name: str, available: bool,
-                                         delivery_time: datetime, status: str) -> Optional[OrderItemRead]:
-        provider = await crud_provider.get_provider_by_name(name=provider_name, session=session)
-        order_item = await session.get(OrderItem, order_item_id)
-        if order_item:
-            order_item.provider_id = provider.id
-            order_item.available = available
-            order_item.delivery_time = delivery_time
-            order_item.status = status
-            await session.commit()
-            await session.refresh(order_item)
-        return order_item
+        await session.execute(update(OrderItem).where(OrderItem.id == db_order_item.id).
+                              values(provider_id=order_item.provider_id,
+                                     available=order_item.available,
+                                     delivery_time=order_item.delivery_time,
+                                     status='В обработке',
+                                     total_price=product.price * order_item.quantity,
+                                     ))
+        await session.commit()
+        await session.refresh(db_order_item)
+        return OrderItemRead(
+            id=db_order_item.id,
+            product=ProductRead(id=product.id, name=product.name, price=product.price),
+            quantity=db_order_item.quantity,
+            provider_id=db_order_item.provider_id,
+            available=db_order_item.available,
+            delivery_time=db_order_item.delivery_time,
+            total_price=db_order_item.total_price
+        )
 
 
 crud_order = OrderCRUD(Order)
