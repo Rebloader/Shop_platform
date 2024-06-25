@@ -185,3 +185,5 @@ fabric.properties
 .idea
 #/alembic
 #alembic.ini
+.xlsx
+.pdf

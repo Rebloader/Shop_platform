@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from fastapi import HTTPException, status
 from sqlalchemy import select, update, delete
@@ -8,7 +7,7 @@ from sqlalchemy.orm import selectinload
 
 from src.api_v1.schemas.dealer import DealerRead
 from src.api_v1.schemas.product import ProductRead
-from src.models import Order, OrderItem, Product, Dealer
+from src.models import Order, OrderItem, Product
 from src.api_v1.crud.base_crud import CRUD
 from src.api_v1.crud.product_crud import crud_product
 from src.api_v1.crud.provider_crud import crud_provider
@@ -70,6 +69,20 @@ class OrderCRUD(CRUD):
 
         return order_read
 
+    async def get_order_by_id(self, order_id: int, session: AsyncSession) -> OrderRead:
+        order = await session.execute(select(self.model).where(self.model.id == order_id).
+                                      options(selectinload(self.model.items)))
+        order = order.scalar_one_or_none()
+        if not order:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        dealer_db = await crud_dealer.get_item_by_id(session=session, id_=order.dealer_id)
+        dealer = DealerRead(id=dealer_db.id, name=dealer_db.name, email=dealer_db.email,
+                            phone=dealer_db.phone, address=dealer_db.address)
+        await session.refresh(order, attribute_names=['items'])
+
+        order_read = await serialize_order(session, order, dealer)
+        return order_read
+
     async def get_dealer_orders(self, session: AsyncSession, dealer_id: int) -> list[OrderRead]:
         stmt = (select(self.model)
                 .options(selectinload(self.model.items))
@@ -89,7 +102,7 @@ class OrderCRUD(CRUD):
                                 order_item_id: int, product_id: int) -> OrderItemRead:
         db_order_item = await session.get(OrderItem, order_item_id)
         if not db_order_item:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,)
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, )
         await session.execute(update(Product).
                               where(Product.id == product_id).
                               values(price=order_item.product.price))
