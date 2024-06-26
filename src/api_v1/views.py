@@ -5,8 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db_helper import get_async_session
 from src.api_v1.schemas.provider import ProviderRead, ProviderCreate
-from src.api_v1.schemas.product import ProductRead, ProductCreate
-from src.api_v1.schemas.dealer import DealerCreate, DealerRead
 from src.api_v1.schemas.order import OrderCreate, OrderItemRead, OrderRead, OrderItemUpdate
 
 from src.api_v1.crud.product_crud import crud_product
@@ -75,3 +73,10 @@ async def change_order_item_info(order_item_id: int,
                                                             order_item_id=order_item_id,
                                                             product_id=product.id)
     return updated_order_item
+
+
+@router.patch('/change_order_status/{order_id}', response_model=list[OrderRead])
+async def change_order_status(order_id: int, order_status: str,
+                              session: Annotated[AsyncSession, Depends(get_async_session)]):
+    orders = await crud_order.close_order(session=session, new_status=order_status, order_id=order_id)
+    return orders

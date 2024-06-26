@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     SMTP_PORT: int
 
     class Config:
-        env_file = f'{BASE_DIR}/.env'
+        env_file = f'{BASE_DIR}/.env.dev'
 
 
 settings = Settings()

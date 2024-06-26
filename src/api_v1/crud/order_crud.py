@@ -98,35 +98,54 @@ class OrderCRUD(CRUD):
         result = [await serialize_order(session, order, dealer_to_read) for order in result]
         return result
 
+    async def update_order_status(self, session: AsyncSession, order_id: int):
+        order = await session.get(self.model, order_id)
+        order.status = 'In process'
+        await session.commit()
+        await session.refresh(order)
+
     async def update_order_item(self, session: AsyncSession, order_item: OrderItemUpdate,
                                 order_item_id: int, product_id: int) -> OrderItemRead:
         db_order_item = await session.get(OrderItem, order_item_id)
         if not db_order_item:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, )
-        await session.execute(update(Product).
-                              where(Product.id == product_id).
-                              values(price=order_item.product.price))
-        await session.commit()
-        product = await session.get(Product, product_id)
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-        await session.execute(update(OrderItem).where(OrderItem.id == db_order_item.id).
-                              values(provider_id=order_item.provider_id,
-                                     available=order_item.available,
-                                     delivery_time=order_item.delivery_time,
-                                     status='В обработке',
-                                     total_price=product.price * order_item.quantity,
-                                     ))
+        product_update = await session.get(Product, product_id)
+        product_update.price = order_item.product.price
+        await session.commit()
+        await session.refresh(product_update)
+        await self.update_order_status(session, db_order_item.order_id)
+
+        db_order_item.provider_id = order_item.provider_id
+        db_order_item.available = order_item.available
+        db_order_item.delivery_time = order_item.delivery_time
+        db_order_item.quantity = order_item.quantity
+        db_order_item.status = 'In process'
+        db_order_item.total_price = product_update.price * order_item.quantity
+
         await session.commit()
         await session.refresh(db_order_item)
         return OrderItemRead(
             id=db_order_item.id,
-            product=ProductRead(id=product.id, name=product.name, price=product.price),
+            product=ProductRead(id=product_update.id, name=product_update.name, price=product_update.price),
             quantity=db_order_item.quantity,
             provider_id=db_order_item.provider_id,
             available=db_order_item.available,
             delivery_time=db_order_item.delivery_time,
             total_price=db_order_item.total_price
         )
+
+    async def close_order(self, session: AsyncSession, new_status: str, order_id: int) -> list[OrderRead]:
+        order_to_update = await session.get(self.model, order_id)
+        if not order_to_update:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+        order_to_update.status = new_status
+
+        await session.commit()
+        await session.refresh(order_to_update)
+        order_to_read = await self.get_dealer_orders(session=session, dealer_id=order_to_update.dealer_id)
+        return order_to_read
 
 
 crud_order = OrderCRUD(Order)
