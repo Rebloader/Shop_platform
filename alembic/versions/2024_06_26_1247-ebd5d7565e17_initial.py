@@ -1,8 +1,8 @@
-"""create tables
+"""initial
 
-Revision ID: 959804819e0b
-Revises: 0ca96ec5af34
-Create Date: 2024-06-23 14:09:54.380675
+Revision ID: ebd5d7565e17
+Revises: 
+Create Date: 2024-06-26 12:47:27.225132
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '959804819e0b'
-down_revision: Union[str, None] = '0ca96ec5af34'
+revision: str = 'ebd5d7565e17'
+down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -24,15 +24,17 @@ def upgrade() -> None:
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('email', sa.String(), nullable=False),
     sa.Column('phone', sa.String(), nullable=False),
+    sa.Column('address', sa.String(), nullable=False),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('address'),
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('name'),
     sa.UniqueConstraint('phone')
     )
     op.create_table('product',
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('price', sa.Integer(), nullable=False),
+    sa.Column('price', sa.Integer(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name')
@@ -58,11 +60,12 @@ def upgrade() -> None:
     op.create_table('order_item',
     sa.Column('order_id', sa.Integer(), nullable=False),
     sa.Column('product_id', sa.Integer(), nullable=False),
-    sa.Column('provider_id', sa.Integer(), nullable=False),
+    sa.Column('provider_id', sa.Integer(), nullable=True),
     sa.Column('quantity', sa.Integer(), nullable=False),
     sa.Column('available', sa.Boolean(), nullable=False),
-    sa.Column('delivery_time', sa.DateTime(), nullable=True),
+    sa.Column('delivery_time', sa.DateTime(timezone=True), nullable=True),
     sa.Column('status', sa.String(), nullable=False),
+    sa.Column('total_price', sa.Integer(), nullable=False),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['order_id'], ['order.id'], ),
     sa.ForeignKeyConstraint(['product_id'], ['product.id'], ),

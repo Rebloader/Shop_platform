@@ -1,10 +1,10 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 class DealerBase(BaseModel):
     name: str
     email: EmailStr
-    phone: str
+    phone: str = Field(..., min_length=10, max_length=11)
     address: str
 
 
