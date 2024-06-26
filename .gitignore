@@ -188,3 +188,4 @@ fabric.properties
 .xlsx
 .pdf
 .env.dev
+/documents
