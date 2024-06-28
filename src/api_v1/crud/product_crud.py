@@ -2,11 +2,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api_v1.crud.base_crud import CRUD
-from src.api_v1.schemas.product import ProductRead, ProductCreate
+from src.api_v1.schemas import ProductRead, ProductCreate
 from src.models import Product
 
 
-class CRUDProduct(CRUD):
+class ProductCRUD(CRUD):
     async def create_product(self, session: AsyncSession, product: ProductCreate) -> ProductRead:
         new_product = self.model(
             name=product.name,
@@ -31,4 +31,4 @@ class CRUDProduct(CRUD):
         return updated_product
 
 
-crud_product = CRUDProduct(Product)
+crud_product = ProductCRUD(Product)

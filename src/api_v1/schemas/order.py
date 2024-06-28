@@ -3,8 +3,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-from src.api_v1.schemas.dealer import DealerCreate, DealerRead
-from src.api_v1.schemas.product import ProductCreate, ProductRead, ProductUpdate
+from .dealer import DealerCreate, DealerRead
+from .product import ProductCreate, ProductRead, ProductUpdate
 
 
 class OrderItemBase(BaseModel):

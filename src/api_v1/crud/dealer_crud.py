@@ -6,7 +6,7 @@ from src.api_v1.schemas.dealer import DealerCreate, DealerRead
 from src.models import Dealer
 
 
-class CRUDDealer(CRUD):
+class DealerCRUD(CRUD):
     async def create_new_dealer(self, session: AsyncSession, new_dealer: DealerCreate) -> DealerRead:
         new_dealer = self.model(
             name=new_dealer.name,
@@ -37,4 +37,4 @@ class CRUDDealer(CRUD):
         pass
 
 
-crud_dealer = CRUDDealer(Dealer)
+crud_dealer = DealerCRUD(Dealer)

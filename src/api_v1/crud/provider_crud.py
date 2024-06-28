@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models import Provider
 from src.api_v1.crud.base_crud import CRUD
-from src.api_v1.schemas.provider import ProviderRead, ProviderCreate
+from src.api_v1.schemas import ProviderRead, ProviderCreate
 
 
 class ProviderCRUD(CRUD):
@@ -18,6 +18,12 @@ class ProviderCRUD(CRUD):
         provider = await session.execute(select(self.model).where(self.model.name == name))
         provider = provider.scalars().first()
         return provider
+
+    async def get_all_providers(self, session: AsyncSession) -> list[ProviderRead]:
+        providers = await session.execute(select(self.model).order_by(self.model.name))
+        providers = providers.scalars().all()
+        return [ProviderRead(id=provider.id, name=provider.name, email=provider.email, phone=provider.phone)
+                for provider in providers]
 
 
 crud_provider = ProviderCRUD(Provider)
